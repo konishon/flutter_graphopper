@@ -1,8 +1,11 @@
 package np.com.naxa.graphhooper_route
 
 import android.annotation.SuppressLint
+import android.location.Location
+import android.location.LocationListener
 import android.os.AsyncTask
 import android.os.Build
+import android.os.Bundle
 import android.os.Environment
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -16,14 +19,26 @@ import com.graphhopper.GHRequest
 import com.graphhopper.GraphHopper
 import com.graphhopper.util.Parameters
 import com.graphhopper.util.StopWatch
+import io.flutter.plugin.common.EventChannel
 import java.lang.Exception
+import android.location.LocationManager
+import android.content.Context
+import android.R.string.no
+import android.R.attr.name
+
 
 class GraphhooperRoutePlugin : MethodCallHandler {
+
+
     companion object {
+        private lateinit var locationManager: LocationManager
+
         @JvmStatic
         fun registerWith(registrar: Registrar) {
             val channel = MethodChannel(registrar.messenger(), "graphhooper_route")
             channel.setMethodCallHandler(GraphhooperRoutePlugin())
+
+
         }
     }
 

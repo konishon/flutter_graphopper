@@ -26,7 +26,7 @@ class _MyAppState extends State<MyApp> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
       platformVersion = await GraphhooperRoute.getRouteAsLatLng(
-          [27.7297, 85.3290, 27.7006, 85.3120], "/graphhopper/maps/");
+          [27.7297, 85.3290, 27.7006, 85.3120], "");
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
     }
