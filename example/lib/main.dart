@@ -12,7 +12,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
+  String _latLngDataPoints = 'Unknown';
 
   @override
   void initState() {
@@ -22,13 +22,13 @@ class _MyAppState extends State<MyApp> {
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
-    String platformVersion;
+    String latLngDataPoints;
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
-      platformVersion = await GraphhooperRoute.getRouteAsLatLng(
+      latLngDataPoints = await GraphhooperRoute.getRouteAsLatLng(
           [27.7297, 85.3290, 27.7006, 85.3120], "");
     } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
+      latLngDataPoints = 'Failed to get platform version.';
     }
 
     // If the widget was removed from the tree while the asynchronous platform
@@ -37,10 +37,9 @@ class _MyAppState extends State<MyApp> {
     if (!mounted) return;
 
     setState(() {
-      _platformVersion = platformVersion;
+      _latLngDataPoints = latLngDataPoints;
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +49,7 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Text('Running on: $_platformVersion\n'),
+          child: Text('Response: $_latLngDataPoints\n'),
         ),
       ),
     );

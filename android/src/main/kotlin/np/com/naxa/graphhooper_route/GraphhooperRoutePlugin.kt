@@ -1,34 +1,24 @@
 package np.com.naxa.graphhooper_route
 
 import android.annotation.SuppressLint
-import android.location.Location
-import android.location.LocationListener
+import android.location.LocationManager
 import android.os.AsyncTask
 import android.os.Build
-import android.os.Bundle
 import android.os.Environment
+import com.google.gson.GsonBuilder
+import com.graphhopper.GHRequest
+import com.graphhopper.GraphHopper
+import com.graphhopper.util.Parameters
+import com.graphhopper.util.StopWatch
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry.Registrar
 import java.io.File
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.graphhopper.GHRequest
-import com.graphhopper.GraphHopper
-import com.graphhopper.util.Parameters
-import com.graphhopper.util.StopWatch
-import io.flutter.plugin.common.EventChannel
 import java.lang.Exception
-import android.location.LocationManager
-import android.content.Context
-import android.R.string.no
-import android.R.attr.name
-
 
 class GraphhooperRoutePlugin : MethodCallHandler {
-
 
     companion object {
         private lateinit var locationManager: LocationManager
@@ -37,8 +27,6 @@ class GraphhooperRoutePlugin : MethodCallHandler {
         fun registerWith(registrar: Registrar) {
             val channel = MethodChannel(registrar.messenger(), "graphhooper_route")
             channel.setMethodCallHandler(GraphhooperRoutePlugin())
-
-
         }
     }
 
@@ -54,44 +42,51 @@ class GraphhooperRoutePlugin : MethodCallHandler {
         }
     }
 
-
     @SuppressLint("NewApi")
     class CalcPath() : AsyncTask<Double, Void, String>() {
 
-
         internal var time: Float = 0.toFloat()
 
-        var result: Result? = null;
-        var mapPath: String? = null;
+        var result: Result? = null
+        var mapPath: String? = null
 
         constructor(result: Result, mapPath: String?) : this() {
-            this.result = result;
-            this.mapPath = mapPath;
+            this.result = result
+            this.mapPath = mapPath
         }
 
+        private fun ifMapFileExists(): Boolean {
+            return getMapFolder().exists()
+        }
+
+        private fun downloadMapFromRemoteSource(): String {
+            return "Map file is not found"
+        }
 
         override fun doInBackground(vararg params: Double?): String? {
 
             try {
-                val sw = StopWatch().start()
-                val hopper = GraphHopper().forMobile()
-                hopper.load(File(getMapFolder(), "nepal").getAbsolutePath() + "-gh")
-                val req = GHRequest(params[0]!!, params[1]!!, params[2]!!, params[3]!!)
-                        .setAlgorithm(Parameters.Algorithms.DIJKSTRA_BI)
+                if(ifMapFileExists()) {
+                    val sw = StopWatch().start()
+                    val hopper = GraphHopper().forMobile()
+                    hopper.load(File(getMapFolder(), "nepal").getAbsolutePath() + "-gh")
+                    val req = GHRequest(params[0]!!, params[1]!!, params[2]!!, params[3]!!)
+                            .setAlgorithm(Parameters.Algorithms.DIJKSTRA_BI)
 
+                    val hints = req.getHints().put(Parameters.Routing.INSTRUCTIONS, "true")
+                    val resp = hopper.route(req)
 
-                val hints = req.getHints().put(Parameters.Routing.INSTRUCTIONS, "true")
-                val resp = hopper.route(req)
-
-                time = sw.stop().seconds
-                val gson = GsonBuilder().serializeSpecialFloatingPointValues().create()
-                return resp.all.toString()
+                    time = sw.stop().seconds
+                    val gson = GsonBuilder().serializeSpecialFloatingPointValues().create()
+                    return resp.all.toString()
+                }else{
+                    return  downloadMapFromRemoteSource()
+                }
             } catch (ex: Exception) {
                 ex.printStackTrace()
-
             }
 
-            return "can't load"
+            return "Can't Load Map"
         }
 
         override fun onPreExecute() {
@@ -101,16 +96,16 @@ class GraphhooperRoutePlugin : MethodCallHandler {
 
         override fun onPostExecute(path: String?) {
             super.onPostExecute(path)
-            result?.success(path);
+            result?.success(path)
         }
 
         fun getMapFolder(): File {
             result
-            val mapsFolder: File;
+            val mapsFolder: File
             val greaterOrEqKitkat = Build.VERSION.SDK_INT >= 19
             if (greaterOrEqKitkat) {
                 if (Environment.getExternalStorageState() != Environment.MEDIA_MOUNTED) {
-                    throw RuntimeException("GraphHopper is not usable without an external storage!");
+                    throw RuntimeException("GraphHopper is not usable without an external storage!")
                 }
                 mapsFolder = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
                         mapPath)
@@ -120,5 +115,4 @@ class GraphhooperRoutePlugin : MethodCallHandler {
             return mapsFolder
         }
     }
-
 }
